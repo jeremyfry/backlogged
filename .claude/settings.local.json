@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npm test:*)",
+      "WebFetch(domain:www.dafont.com)"
+    ]
+  }
+}
