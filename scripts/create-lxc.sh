@@ -14,7 +14,7 @@ set -euo pipefail
 # ── Configuration — edit these before running ────────────────────────────────
 VMID="${VMID:-200}"                        # Proxmox container ID (must be free)
 HOSTNAME="${HOSTNAME:-backlogged}"
-STORAGE="${STORAGE:-local-lvm}"            # Storage for the container rootfs
+STORAGE="${STORAGE:-local-zfs}"            # Storage for the container rootfs
 TEMPLATE_STORAGE="${TEMPLATE_STORAGE:-local}"  # Where to cache the template
 DISK_SIZE="${DISK_SIZE:-8}"                # GB
 MEMORY="${MEMORY:-1024}"                   # MB
