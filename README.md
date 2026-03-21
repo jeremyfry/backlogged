@@ -111,15 +111,13 @@ To deploy directly to a Proxmox LXC (Docker-in-LXC), run this on your Proxmox ho
 
 ```bash
 # Clone just the script, or copy it from the repo
-curl -fsSL https://raw.githubusercontent.com/jeremyfry/backlogged/main/scripts/create-lxc.sh | \
-  INITIAL_PASSWORD=yourpassword bash
+curl -fsSL https://raw.githubusercontent.com/jeremyfry/backlogged/main/scripts/create-lxc.sh | bash
 ```
 
 Or with custom settings:
 
 ```bash
-VMID=201 STORAGE=local-lvm APP_PORT=3000 INITIAL_PASSWORD=yourpassword \
-  bash scripts/create-lxc.sh
+VMID=201 STORAGE=local-lvm APP_PORT=3000 bash scripts/create-lxc.sh
 ```
 
 The script will:
