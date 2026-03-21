@@ -12,10 +12,6 @@ services:
       DATABASE_PATH: /app/data/backlogged.db
       CONFIG_PATH: /app/data/config.json
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env — generate with: openssl rand -hex 32}
-      # Only needed on first start to skip the setup screen.
-      # Safe to remove from .env after the initial run.
-      INITIAL_USERNAME: ${INITIAL_USERNAME:-}
-      INITIAL_PASSWORD: ${INITIAL_PASSWORD:-}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s

@@ -1,5 +1,5 @@
 import type { Game } from '@backlogged/types'
-import { STATUS_COLORS, STATUS_LABELS } from '../lib/constants'
+import { STATUS_COLORS, STATUS_LABELS, CONDITIONS } from '../lib/constants'
 import PlatformLogo, { hasPlatformLogo } from './PlatformLogo'
 
 interface Props {
@@ -8,8 +8,12 @@ interface Props {
 }
 
 export default function GameCard({ game, onClick }: Props) {
+  const isWishlist = game.ownershipStatus === 'wishlist'
   const statusColor = STATUS_COLORS[game.completionStatus] ?? 'var(--border)'
-  const statusLabel = STATUS_LABELS[game.completionStatus] ?? ''
+  const label = isWishlist
+    ? (CONDITIONS.find(c => c.value === game.condition)?.label ?? '')
+    : (STATUS_LABELS[game.completionStatus] ?? '')
+  const labelColor = isWishlist ? 'var(--accent)' : statusColor
   const isJapanese = game.language === 'Japanese'
 
   return (
@@ -17,7 +21,7 @@ export default function GameCard({ game, onClick }: Props) {
          onKeyDown={e => e.key === 'Enter' && onClick?.()}>
 
       {/* Cover art */}
-      <div className="relative aspect-[2/3] w-full flex-shrink-0">
+      <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '2.3/3' }}>
         {game.coverArtUrl ? (
           <img
             src={game.coverArtUrl}
@@ -48,11 +52,10 @@ export default function GameCard({ game, onClick }: Props) {
       </div>
 
       {/* Info section */}
-      <div className="flex flex-col gap-2 px-2.5 pt-2.5 pb-2.5"
+      <div className="flex flex-col px-2.5 pt-2.5"
            style={{ background: 'var(--elevated)', borderTop: '1px solid var(--border)' }}>
-        {/* Title — always exactly 2 lines tall */}
-        <p className="text-xs font-semibold leading-tight line-clamp-2"
-           style={{ color: 'var(--text)', minHeight: 'calc(2 * 1.25 * 0.75rem)' }}>
+        {/* Title */}
+        <p className="text-xs font-semibold leading-tight truncate mb-1" style={{ color: 'var(--text)' }}>
           {game.title}
         </p>
         {/* Platform logo */}
@@ -62,15 +65,14 @@ export default function GameCard({ game, onClick }: Props) {
             : <span className="text-[11px] font-medium">{game.platform}</span>
           }
         </div>
-        {/* Status */}
-        <span className="text-[11px] font-semibold"
-              style={{ color: statusColor }}>
-          {statusLabel}
+        {/* Status / Condition */}
+        <span className="text-[11px] font-semibold mt-1" style={{ color: labelColor }}>
+          {label}
         </span>
       </div>
 
       {/* Status accent bar */}
-      <div className="h-[3px] flex-shrink-0" style={{ background: statusColor }} />
+      <div className="h-[3px] flex-shrink-0" style={{ background: labelColor }} />
     </div>
   )
 }

@@ -17,7 +17,7 @@
 :root {
   --bg:            #07070f;
   --surface:       #0e0e1c;
-  --surface-glass: rgba(14, 14, 28, 0.75);
+  --surface-glass: rgba(78, 78, 111, 0.06);
   --elevated:      #151528;
   --card:          #111120;
   --border:        #1c1c32;
@@ -188,22 +188,21 @@ body::after {
 
 .sheet-panel {
   position: fixed;
+  padding: 20px 0;
   left: 50%;
-  transform: translateX(-50%) translateY(100%);
-  bottom: 0;
+  top: 56px;
   width: 100%;
   max-width: 640px;
   z-index: 50;
   background: var(--surface);
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px;
   border: 1px solid var(--border);
-  border-bottom: none;
-  max-height: 92dvh;
+  max-height: calc(92dvh - 56px);
   display: flex;
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.sheet-panel-hidden { transform: translateX(-50%) translateY(100%); }
+.sheet-panel-hidden { transform: translateX(-50%) translateY(-100%); }
 .sheet-panel-visible { transform: translateX(-50%) translateY(0); }
 
 /* Status colors */

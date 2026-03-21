@@ -24,8 +24,6 @@ BRIDGE="${BRIDGE:-vmbr0}"
 # App config — these get written into /opt/backlogged/.env inside the container
 APP_PORT="${APP_PORT:-3000}"
 JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
-INITIAL_USERNAME="${INITIAL_USERNAME:-admin}"
-INITIAL_PASSWORD="${INITIAL_PASSWORD:-}"   # Leave blank to use the setup screen
 
 REPO_URL="${REPO_URL:-https://github.com/jeremyfry/backlogged.git}"
 # ─────────────────────────────────────────────────────────────────────────────
@@ -99,8 +97,6 @@ pct exec "${VMID}" -- bash -c "
   # Write .env
   cat > .env <<'ENVEOF'
 JWT_SECRET=${JWT_SECRET}
-INITIAL_USERNAME=${INITIAL_USERNAME}
-INITIAL_PASSWORD=${INITIAL_PASSWORD}
 PORT=${APP_PORT}
 ENVEOF
 
@@ -141,12 +137,7 @@ echo -e "  App URL   : ${GREEN}http://${CONTAINER_IP}:${APP_PORT}${NC}"
 echo -e "  Container : pct enter ${VMID}"
 echo -e "  Logs      : pct exec ${VMID} -- docker compose -C /opt/backlogged logs -f"
 echo ""
-if [[ -z "${INITIAL_PASSWORD}" ]]; then
-  warn "No INITIAL_PASSWORD was set — complete first-time setup in the browser."
-else
-  echo -e "  Username  : ${INITIAL_USERNAME}"
-  warn "Remove INITIAL_USERNAME and INITIAL_PASSWORD from /opt/backlogged/.env"
-fi
+warn "Complete first-time account setup in the browser."
 echo ""
 echo -e "  JWT_SECRET: ${JWT_SECRET}"
 warn "Save the JWT_SECRET above — you'll need it if you recreate the container."

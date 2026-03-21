@@ -1,3 +1,6 @@
+> [!WARNING]
+> This project was vibe coded with Claude Code. It has yet to be fully reviewed by a human for security. Use at your own risk.
+
 # BACKLOGGED
 
 **A self-hosted retro game collection tracker.**
@@ -63,10 +66,6 @@ Edit `.env`:
 ```env
 # Generate with: openssl rand -hex 32
 JWT_SECRET=your-secret-here
-
-# Creates your login on first start — remove after initial run
-INITIAL_USERNAME=admin
-INITIAL_PASSWORD=yourpassword
 ```
 
 Then:
@@ -75,7 +74,7 @@ Then:
 docker compose up -d
 ```
 
-Open **http://localhost:3000**. If you didn't set `INITIAL_*` vars, the app will walk you through setup on first load.
+Open **http://localhost:3000** — the app will walk you through account setup on first load.
 
 ---
 
@@ -86,8 +85,6 @@ All configuration is via environment variables or the `.env` file.
 | Variable           | Required | Description |
 |--------------------|----------|-------------|
 | `JWT_SECRET`       | Yes      | Secret for signing auth tokens. Generate with `openssl rand -hex 32`. |
-| `INITIAL_USERNAME` | No       | Auto-creates a user on first start. Remove after the first run. |
-| `INITIAL_PASSWORD` | No       | Password for the auto-created user (min 8 characters). |
 | `PORT`             | No       | Host port to expose (default: `3000`). |
 | `IGDB_CLIENT_ID`   | No       | Twitch/IGDB client ID for game search. Get one at [dev.twitch.tv](https://dev.twitch.tv/console). |
 | `IGDB_CLIENT_SECRET` | No     | Twitch/IGDB client secret. |

@@ -40,17 +40,12 @@ export default function Sheet({ open, onClose, title, children }: SheetProps) {
         aria-modal="true"
         className={`sheet-panel ${open ? 'sheet-panel-visible' : 'sheet-panel-hidden'}`}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--border-bright)' }} />
-        </div>
-
         {title && (
           <h2 className="font-display text-3xl px-5 pt-1 pb-3 shrink-0">{title}</h2>
         )}
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-5 pb-6 pb-safe">
+        <div className="overflow-y-auto flex-1 px-5 pb-12 pb-safe">
           {children}
         </div>
       </div>

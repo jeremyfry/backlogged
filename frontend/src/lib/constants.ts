@@ -1,3 +1,5 @@
+import { Condition } from "@backlogged/types"
+
 /** Map IGDB platform names → our preferred short names */
 export const IGDB_PLATFORM_MAP: Record<string, string> = {
   // Nintendo

@@ -30,33 +30,6 @@ export function writeConfig(config: AppConfig): void {
 }
 
 /**
- * On first start (no config file), optionally auto-create from INITIAL_USERNAME /
- * INITIAL_PASSWORD env vars (useful for Docker/automated deploys).
- * If neither env var is set, the server starts unconfigured and the frontend
- * first-run setup flow handles credential creation.
- */
-export async function initializeConfig(): Promise<void> {
-  if (readConfig() !== null) return
-
-  const username = process.env.INITIAL_USERNAME
-  const password = process.env.INITIAL_PASSWORD
-
-  if (!username || !password) {
-    console.log('No credentials configured — complete first-time setup in the app.')
-    return
-  }
-
-  if (password.length < 8) {
-    console.warn('INITIAL_PASSWORD must be at least 8 characters — skipping auto-setup.')
-    return
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12)
-  writeConfig({ username, passwordHash })
-  console.log(`Created login for user "${username}" from environment variables`)
-}
-
-/**
  * On startup, check for a reset-pass.txt file in the data directory.
  * File format:  newpassword
  *           or: newusername:newpassword
