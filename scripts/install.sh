@@ -87,6 +87,7 @@ After=network.target
 Type=simple
 User=${SERVICE_USER}
 WorkingDirectory=${REPO_DIR}
+Environment=NODE_ENV=production
 EnvironmentFile=${REPO_DIR}/.env
 ExecStart=$(command -v node) backend/dist/index.js
 Restart=on-failure
