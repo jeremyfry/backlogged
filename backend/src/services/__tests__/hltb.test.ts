@@ -4,9 +4,9 @@ import { searchHltb, clearTokenCache } from '../hltb.js'
 // Mock fetch that simulates the new HLTB API
 function makeFetch(games: object[]) {
   let calls = 0
-  return async (url: string, opts?: RequestInit) => {
+  return async (url: string | URL | Request, opts?: RequestInit) => {
     calls++
-    if ((url as string).includes('/api/finder/init')) {
+    if (url.toString().includes('/api/finder/init')) {
       return { ok: true, json: async () => ({ token: 'test-token' }) } as Response
     }
     return {
@@ -74,8 +74,8 @@ describe('searchHltb', () => {
   it('retries with fresh token on 403', async () => {
     let tokenCalls = 0
     let searchCalls = 0
-    const fetchFn = async (url: string) => {
-      if ((url as string).includes('/api/finder/init')) {
+    const fetchFn = async (url: string | URL | Request) => {
+      if (url.toString().includes('/api/finder/init')) {
         tokenCalls++
         return { ok: true, json: async () => ({ token: `token-${tokenCalls}` }) } as Response
       }

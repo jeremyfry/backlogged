@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Pencil, Trash2, Clock, Tag } from 'lucide-react'
-import type { Game } from '@backlogged/types'
+import type { Game, CompletionStatus } from '@backlogged/types'
 import { gamesApi } from '../api/games'
 import { useQueryClient } from '@tanstack/react-query'
 import GameForm from './GameForm'
@@ -59,7 +59,7 @@ export default function GameDetailSheet({ game, onClose }: Props) {
     handleClose()
   }
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: CompletionStatus) => {
     if (!game) return
     setStatus(newStatus)
     await gamesApi.update(game.id, { completionStatus: newStatus })
@@ -179,7 +179,7 @@ export default function GameDetailSheet({ game, onClose }: Props) {
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusColor }} />
                   <select
                     value={status}
-                    onChange={e => handleStatusChange(e.target.value)}
+                    onChange={e => handleStatusChange(e.target.value as CompletionStatus)}
                     className="text-xs font-semibold bg-transparent border-none outline-none cursor-pointer appearance-none pr-3"
                     style={{ color: statusColor }}
                   >

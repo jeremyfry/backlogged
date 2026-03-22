@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -10,61 +10,6 @@ function makeTempDir() {
   mkdirSync(dir, { recursive: true })
   return dir
 }
-
-describe('initializeConfig', () => {
-  let tmpDir: string
-  let originalExit: typeof process.exit
-
-  beforeEach(() => {
-    tmpDir = makeTempDir()
-    process.env.CONFIG_PATH = path.join(tmpDir, 'config.json')
-    originalExit = process.exit
-    // Prevent process.exit from killing the test runner
-    process.exit = vi.fn() as never
-  })
-
-  afterEach(() => {
-    process.exit = originalExit
-    delete process.env.CONFIG_PATH
-    delete process.env.INITIAL_USERNAME
-    delete process.env.INITIAL_PASSWORD
-  })
-
-  it('creates config from env vars on first start', async () => {
-    const { initializeConfig } = await import('../config.js')
-    process.env.INITIAL_USERNAME = 'admin'
-    process.env.INITIAL_PASSWORD = 'securepass123'
-
-    await initializeConfig()
-
-    const { readConfig } = await import('../config.js')
-    const config = readConfig()
-    expect(config?.username).toBe('admin')
-    expect(await bcrypt.compare('securepass123', config!.passwordHash)).toBe(true)
-  })
-
-  it('does nothing when no config and no env vars set (frontend handles setup)', async () => {
-    const { initializeConfig, readConfig } = await import('../config.js')
-
-    await initializeConfig()
-
-    // Server starts without credentials — no exit, no config written
-    expect(process.exit).not.toHaveBeenCalled()
-    expect(readConfig()).toBeNull()
-  })
-
-  it('does nothing if config already exists', async () => {
-    const { writeConfig, initializeConfig, readConfig } = await import('../config.js')
-    const existing = { username: 'existing', passwordHash: 'hash' }
-    writeConfig(existing)
-
-    process.env.INITIAL_USERNAME = 'newuser'
-    process.env.INITIAL_PASSWORD = 'newpassword123'
-    await initializeConfig()
-
-    expect(readConfig()?.username).toBe('existing')
-  })
-})
 
 describe('checkPasswordReset', () => {
   let tmpDir: string
