@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Library, Heart, ListOrdered, LogOut, Menu, X } from 'lucide-react'
+import { Library, Heart, ListOrdered, LogOut, Menu, X, Settings } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import SiteLogo from './SiteLogo'
 
@@ -86,9 +86,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ))}
 
               <div style={{ borderTop: '1px solid var(--border)' }}>
+                <NavLink
+                  to="/settings"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'text-accent'
+                        : 'text-text-muted hover:text-text hover:bg-elevated'
+                    }`
+                  }
+                  style={({ isActive }) => isActive ? { background: 'var(--elevated)' } : {}}
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Settings size={16} strokeWidth={isActive ? 2.5 : 1.8} />
+                      Settings
+                    </>
+                  )}
+                </NavLink>
                 <button
                   onClick={() => { setOpen(false); handleLogout() }}
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium w-full text-left text-text-muted hover:text-text hover:bg-elevated transition-colors"
+                  style={{ borderTop: '1px solid var(--border)' }}
                 >
                   <LogOut size={16} />
                   Sign Out

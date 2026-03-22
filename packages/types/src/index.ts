@@ -102,6 +102,13 @@ export interface IgdbSearchResult {
   summary: string | null
 }
 
+export interface AppSettings {
+  /** IGDB platform filter — empty array means no filter (show all). */
+  igdbPlatforms: string[]
+  /** Pre-filled condition when adding a new owned game. Null = no default. */
+  defaultCondition: Condition | null
+}
+
 export interface ApiError {
   error: string
   message: string

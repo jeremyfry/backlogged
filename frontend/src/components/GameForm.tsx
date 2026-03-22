@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Clock, RefreshCw } from 'lucide-react'
 import type { CreateGameInput, IgdbSearchResult, HltbResult } from '@backlogged/types'
 import { PLATFORMS, LANGUAGES, CONDITIONS, COMPLETION_STATUSES } from '../lib/constants'
+import Combobox from './Combobox'
 import { formatMinutes } from '../lib/format'
 import { hltbApi } from '../api/hltb'
 
@@ -136,31 +137,23 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Platform *</label>
-          <input
-            className="input"
-            list="platform-list"
+          <Combobox
             value={form.platform}
-            onChange={e => set('platform', e.target.value)}
-            required
+            onChange={v => set('platform', v)}
+            options={PLATFORMS}
             placeholder="NES, PS2…"
+            required
           />
-          <datalist id="platform-list">
-            {PLATFORMS.map(p => <option key={p} value={p} />)}
-          </datalist>
         </div>
         <div>
           <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Language *</label>
-          <input
-            className="input"
-            list="language-list"
+          <Combobox
             value={form.language}
-            onChange={e => set('language', e.target.value)}
-            required
+            onChange={v => set('language', v)}
+            options={LANGUAGES}
             placeholder="English"
+            required
           />
-          <datalist id="language-list">
-            {LANGUAGES.map(l => <option key={l} value={l} />)}
-          </datalist>
         </div>
       </div>
 

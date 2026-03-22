@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Search, ArrowLeft } from 'lucide-react'
 import type { IgdbSearchResult, CreateGameInput, OwnershipStatus, CompletionStatus } from '@backlogged/types'
 import { igdbApi } from '../api/igdb'
 import { gamesApi } from '../api/games'
 import { normalizeIgdbPlatform } from '../lib/constants'
+import { useSettings } from '../hooks/useSettings'
 import { useQueryClient } from '@tanstack/react-query'
 import Sheet from './Sheet'
 import GameForm from './GameForm'
@@ -30,33 +31,34 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
   const [step, setStep] = useState<Step>('search')
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
-  const [results, setResults] = useState<IgdbSearchResult[]>([])
+  const [rawResults, setRawResults] = useState<IgdbSearchResult[]>([])
   const [selected, setSelected] = useState<IgdbSearchResult | null>(null)
   const queryClient = useQueryClient()
-  const inputRef = useRef<HTMLInputElement>(null)
   const debouncedQuery = useDebounce(query, 450)
+  const { settings } = useSettings()
 
-  // Auto-focus search on open
+  // IGDB fetch — only re-runs when the query changes, not when settings change
   useEffect(() => {
-    if (open && step === 'search') {
-      setTimeout(() => inputRef.current?.focus(), 300)
-    }
-  }, [open, step])
-
-  // IGDB search
-  useEffect(() => {
-    if (!debouncedQuery.trim()) { setResults([]); return }
+    if (!debouncedQuery.trim()) { setRawResults([]); return }
     setSearching(true)
     igdbApi.search(debouncedQuery)
-      .then(setResults)
-      .catch(() => setResults([]))
+      .then(setRawResults)
+      .catch(() => setRawResults([]))
       .finally(() => setSearching(false))
   }, [debouncedQuery])
+
+  // Filter is a pure derivation — updates instantly when settings change, no re-fetch
+  const results = useMemo(() => {
+    if (settings.igdbPlatforms.length === 0) return rawResults
+    return rawResults.filter(game =>
+      game.platforms.some(p => settings.igdbPlatforms.includes(normalizeIgdbPlatform(p)))
+    )
+  }, [rawResults, settings.igdbPlatforms])
 
   const reset = () => {
     setStep('search')
     setQuery('')
-    setResults([])
+    setRawResults([])
     setSelected(null)
   }
 
@@ -97,13 +99,13 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
       onClose={handleClose}
       title={step === 'search' ? 'Add Game' : undefined}
     >
-      {step === 'search' && (
+      {open && step === 'search' && (
         <div className="space-y-4">
           {/* Search input */}
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
             <input
-              ref={inputRef}
+              autoFocus
               className="input pl-9"
               placeholder="Search IGDB…"
               value={query}
@@ -138,7 +140,13 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
                     <div className="min-w-0">
                       <p className="font-semibold text-sm truncate">{game.title}</p>
                       <p className="text-xs text-text-muted">
-                        {[game.releaseYear, game.platforms.slice(0, 2).join(', ')].filter(Boolean).join(' · ')}
+                        {[
+                          game.releaseYear,
+                          (settings.igdbPlatforms.length > 0
+                            ? game.platforms.filter(p => settings.igdbPlatforms.includes(normalizeIgdbPlatform(p)))
+                            : game.platforms.slice(0, 2)
+                          ).map(normalizeIgdbPlatform).join(', '),
+                        ].filter(Boolean).join(' · ')}
                       </p>
                     </div>
                   </button>
@@ -175,6 +183,7 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
             initial={{
               ...(defaultOwnershipStatus && { ownershipStatus: defaultOwnershipStatus }),
               ...(defaultCompletionStatus && { completionStatus: defaultCompletionStatus }),
+              ...(settings.defaultCondition && { condition: settings.defaultCondition }),
               ...initialFromIgdb,
             }}
             igdbData={selected}

@@ -6,6 +6,7 @@ import authRouter from './routes/auth.js'
 import gamesRouter from './routes/games.js'
 import igdbRouter from './routes/igdb.js'
 import hltbRouter from './routes/hltb.js'
+import settingsRouter from './routes/settings.js'
 import type { ApiError } from '@backlogged/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -19,6 +20,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/games', gamesRouter)
 app.use('/api/igdb', igdbRouter)
 app.use('/api/hltb', hltbRouter)
+app.use('/api/settings', settingsRouter)
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })

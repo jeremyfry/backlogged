@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Collection from './pages/Collection'
 import Wishlist from './pages/Wishlist'
 import Backlog from './pages/Backlog'
+import Settings from './pages/Settings'
 import RetroBackground from './components/RetroBackground'
 
 const queryClient = new QueryClient({
@@ -23,6 +24,7 @@ function ProtectedRoutes() {
         <Route path="collection" element={<Collection />} />
         <Route path="wishlist" element={<Wishlist />} />
         <Route path="backlog" element={<Backlog />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="collection" replace />} />
       </Routes>
     </Layout>
