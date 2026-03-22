@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, ArrowLeft } from 'lucide-react'
+import { Search, ArrowLeft, X } from 'lucide-react'
 import type { IgdbSearchResult, CreateGameInput, OwnershipStatus, CompletionStatus } from '@backlogged/types'
 import { igdbApi } from '../api/igdb'
 import { gamesApi } from '../api/games'
@@ -30,22 +30,28 @@ function useDebounce<T>(value: T, ms: number): T {
 export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, defaultCompletionStatus }: Props) {
   const [step, setStep] = useState<Step>('search')
   const [query, setQuery] = useState('')
+  const [beforeYear, setBeforeYear] = useState('')
   const [searching, setSearching] = useState(false)
   const [rawResults, setRawResults] = useState<IgdbSearchResult[]>([])
   const [selected, setSelected] = useState<IgdbSearchResult | null>(null)
   const queryClient = useQueryClient()
   const debouncedQuery = useDebounce(query, 450)
+  const debouncedBeforeYear = useDebounce(beforeYear, 600)
   const { settings } = useSettings()
 
-  // IGDB fetch — only re-runs when the query changes, not when settings change
+  const beforeYearNum = debouncedBeforeYear ? parseInt(debouncedBeforeYear, 10) : undefined
+
+  // IGDB fetch — only re-runs when the query or year filter changes, not when settings change
   useEffect(() => {
     if (!debouncedQuery.trim()) { setRawResults([]); return }
     setSearching(true)
-    igdbApi.search(debouncedQuery)
+    igdbApi.search(debouncedQuery, {
+      beforeYear: Number.isFinite(beforeYearNum) ? beforeYearNum : undefined,
+    })
       .then(setRawResults)
       .catch(() => setRawResults([]))
       .finally(() => setSearching(false))
-  }, [debouncedQuery])
+  }, [debouncedQuery, beforeYearNum])
 
   // Filter is a pure derivation — updates instantly when settings change, no re-fetch
   const results = useMemo(() => {
@@ -58,6 +64,7 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
   const reset = () => {
     setStep('search')
     setQuery('')
+    setBeforeYear('')
     setRawResults([])
     setSelected(null)
   }
@@ -102,15 +109,37 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
       {open && step === 'search' && (
         <div className="space-y-4">
           {/* Search input */}
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-            <input
-              autoFocus
-              className="input pl-9"
-              placeholder="Search IGDB…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+              <input
+                autoFocus
+                className="input pl-9"
+                placeholder="Search IGDB…"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <input
+                className="input w-24 text-center"
+                type="number"
+                min="1970"
+                max={new Date().getFullYear()}
+                placeholder="Before"
+                value={beforeYear}
+                onChange={e => setBeforeYear(e.target.value)}
+              />
+              {beforeYear && (
+                <button
+                  type="button"
+                  onClick={() => setBeforeYear('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Results */}

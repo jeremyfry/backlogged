@@ -123,12 +123,24 @@ const GAME_FIELDS =
 
 export async function searchGames(
   query: string,
+  options: { beforeYear?: number } = {},
   fetchFn = globalThis.fetch,
 ): Promise<IgdbSearchResult[]> {
   const escaped = query.replace(/"/g, '\\"')
-  const body = `search "${escaped}"; fields ${GAME_FIELDS}; limit 10;`
+
+  const whereClauses: string[] = []
+  if (options.beforeYear != null) {
+    const ts = Math.floor(new Date(options.beforeYear, 0, 1).getTime() / 1000)
+    whereClauses.push(`first_release_date < ${ts}`)
+    whereClauses.push('first_release_date != null')
+  }
+
+  const where = whereClauses.length > 0 ? ` where ${whereClauses.join(' & ')};` : ''
+  const body = `search "${escaped}"; fields ${GAME_FIELDS};${where} limit 10;`
   const results = (await igdbRequest('games', body, fetchFn)) as RawIgdbGame[]
-  return results.map(normalize)
+  return results
+    .map(normalize)
+    .sort((a, b) => (a.releaseYear ?? 9999) - (b.releaseYear ?? 9999))
 }
 
 export async function getIgdbGame(

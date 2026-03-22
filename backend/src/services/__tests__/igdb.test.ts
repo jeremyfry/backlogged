@@ -61,7 +61,7 @@ describe('searchGames', () => {
 
   it('returns normalized results', async () => {
     const fetchFn = makeFetch([mockRawGame])
-    const results = await searchGames('castlevania', fetchFn)
+    const results = await searchGames('castlevania', {}, fetchFn)
 
     expect(results).toHaveLength(1)
     const game = results[0]
@@ -77,39 +77,39 @@ describe('searchGames', () => {
 
   it('derives release year from unix timestamp', async () => {
     const fetchFn = makeFetch([mockRawGame])
-    const [result] = await searchGames('castlevania', fetchFn)
+    const [result] = await searchGames('castlevania', {}, fetchFn)
     expect(result.releaseYear).toBe(1986)
   })
 
   it('returns null coverUrl when no cover', async () => {
     const fetchFn = makeFetch([{ ...mockRawGame, cover: undefined }])
-    const [result] = await searchGames('castlevania', fetchFn)
+    const [result] = await searchGames('castlevania', {}, fetchFn)
     expect(result.coverUrl).toBeNull()
   })
 
   it('returns null developer/publisher when no involved_companies', async () => {
     const fetchFn = makeFetch([{ ...mockRawGame, involved_companies: undefined }])
-    const [result] = await searchGames('castlevania', fetchFn)
+    const [result] = await searchGames('castlevania', {}, fetchFn)
     expect(result.developer).toBeNull()
     expect(result.publisher).toBeNull()
   })
 
   it('returns empty array when no results', async () => {
     const fetchFn = makeFetch([])
-    expect(await searchGames('xyznotarealthing', fetchFn)).toEqual([])
+    expect(await searchGames('xyznotarealthing', {}, fetchFn)).toEqual([])
   })
 
   it('escapes double quotes in the search query', async () => {
     const fetchFn = makeFetch([])
-    await searchGames('some "quoted" title', fetchFn)
+    await searchGames('some "quoted" title', {}, fetchFn)
     const body = fetchFn.mock.calls[1][1].body as string
     expect(body).toContain('some \\"quoted\\" title')
   })
 
   it('reuses cached token on second call', async () => {
     const fetchFn = makeFetch([])
-    await searchGames('foo', fetchFn)
-    await searchGames('bar', fetchFn)
+    await searchGames('foo', {}, fetchFn)
+    await searchGames('bar', {}, fetchFn)
     const tokenCalls = fetchFn.mock.calls.filter((c: unknown[]) =>
       String(c[0]).includes('twitch.tv'),
     )
@@ -120,7 +120,7 @@ describe('searchGames', () => {
     clearTokenCache()
     delete process.env.IGDB_CLIENT_ID
     delete process.env.IGDB_CLIENT_SECRET
-    await expect(searchGames('test', makeFetch([]))).rejects.toThrow(
+    await expect(searchGames('test', {}, makeFetch([]))).rejects.toThrow(
       'IGDB_CLIENT_ID and IGDB_CLIENT_SECRET must be set',
     )
   })

@@ -11,13 +11,16 @@ router.use(requireAuth)
 router.get(
   '/search',
   asyncHandler(async (req, res) => {
-    const q = req.query.q as string | undefined
+    const { q, beforeYear } = req.query as Record<string, string | undefined>
     if (!q?.trim()) {
       const body: ApiError = { error: 'bad_request', message: 'q parameter is required' }
       res.status(400).json(body)
       return
     }
-    const results = await searchGames(q.trim())
+    const beforeYearNum = beforeYear ? parseInt(beforeYear, 10) : undefined
+    const results = await searchGames(q.trim(), {
+      beforeYear: Number.isFinite(beforeYearNum) ? beforeYearNum : undefined,
+    })
     res.json(results)
   }),
 )
