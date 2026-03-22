@@ -54,11 +54,24 @@ else
   info ".env already exists, leaving it unchanged."
 fi
 
-# ── 4. Service user ───────────────────────────────────────────────────────────
+# ── 4. Service user & permissions ────────────────────────────────────────────
 if ! id "${SERVICE_USER}" &>/dev/null; then
   info "Creating service user '${SERVICE_USER}'..."
   useradd --system --no-create-home --shell /usr/sbin/nologin "${SERVICE_USER}"
 fi
+
+# Ensure the data directory exists before handing off ownership
+mkdir -p "${REPO_DIR}/data"
+
+# The service user needs to be able to traverse every directory in the path.
+# If the repo lives somewhere with restricted parent permissions (e.g. under
+# /root), make those parents world-executable so systemd can chdir into the
+# working directory.
+_path="${REPO_DIR}"
+while [[ "${_path}" != "/" ]]; do
+  chmod o+x "${_path}"
+  _path="$(dirname "${_path}")"
+done
 
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "${REPO_DIR}"
 
