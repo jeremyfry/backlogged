@@ -80,24 +80,30 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
   }
 
   const isOwned = form.ownershipStatus === 'owned'
+  const isDigital = form.ownershipStatus === 'digital'
+  const isWishlist = form.ownershipStatus === 'wishlist'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
       {/* Ownership toggle */}
       <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-        {(['owned', 'wishlist'] as const).map(s => (
+        {([
+          { value: 'owned', label: 'Owned' },
+          { value: 'digital', label: 'Digital' },
+          { value: 'wishlist', label: 'Wishlist' },
+        ] as const).map(s => (
           <button
-            key={s}
+            key={s.value}
             type="button"
-            onClick={() => set('ownershipStatus', s)}
-            className="flex-1 py-2.5 text-sm font-semibold capitalize transition-colors"
+            onClick={() => set('ownershipStatus', s.value)}
+            className="flex-1 py-2.5 text-sm font-semibold transition-colors"
             style={{
-              background: form.ownershipStatus === s ? 'var(--accent)' : 'var(--elevated)',
-              color: form.ownershipStatus === s ? '#fff' : 'var(--text-muted)',
+              background: form.ownershipStatus === s.value ? 'var(--accent)' : 'var(--elevated)',
+              color: form.ownershipStatus === s.value ? '#fff' : 'var(--text-muted)',
             }}
           >
-            {s}
+            {s.label}
           </button>
         ))}
       </div>
@@ -158,7 +164,8 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
         </div>
       </div>
 
-      {/* Condition */}
+      {/* Condition (owned only) */}
+      {isOwned && (
       <div>
         <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Condition</label>
         <select className="input" value={form.condition ?? ''} onChange={e => set('condition', (e.target.value || null) as CreateGameInput['condition'])}>
@@ -166,9 +173,10 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
           {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
       </div>
+      )}
 
-      {/* Completion status (owned only) */}
-      {isOwned && (
+      {/* Completion status (owned or digital) */}
+      {(isOwned || isDigital) && (
         <div>
           <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Status</label>
           <div className="grid grid-cols-3 gap-2">
@@ -235,15 +243,15 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
       )}
 
       {/* Wishlist: target price */}
-      {!isOwned && (
+      {isWishlist && (
         <div>
           <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Target Price (optional)</label>
           <input className="input" type="number" min="0" step="0.01" placeholder="Max you'd pay" value={form.targetPrice ?? ''} onChange={e => set('targetPrice', e.target.value ? Number(e.target.value) : null)} />
         </div>
       )}
 
-      {/* Playthrough tracking (owned only) */}
-      {isOwned && (
+      {/* Playthrough tracking (owned or digital) */}
+      {(isOwned || isDigital) && (
         <div className="space-y-3">
           <label className="block text-xs text-text-muted tracking-wide uppercase">My Playthrough (optional)</label>
           <div className="grid grid-cols-2 gap-3">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, ArrowLeft } from 'lucide-react'
-import type { IgdbSearchResult, CreateGameInput } from '@backlogged/types'
+import type { IgdbSearchResult, CreateGameInput, OwnershipStatus, CompletionStatus } from '@backlogged/types'
 import { igdbApi } from '../api/igdb'
 import { gamesApi } from '../api/games'
 import { normalizeIgdbPlatform } from '../lib/constants'
@@ -11,6 +11,8 @@ import GameForm from './GameForm'
 interface Props {
   open: boolean
   onClose: () => void
+  defaultOwnershipStatus?: OwnershipStatus
+  defaultCompletionStatus?: CompletionStatus
 }
 
 type Step = 'search' | 'form'
@@ -24,7 +26,7 @@ function useDebounce<T>(value: T, ms: number): T {
   return debounced
 }
 
-export default function AddGameSheet({ open, onClose }: Props) {
+export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, defaultCompletionStatus }: Props) {
   const [step, setStep] = useState<Step>('search')
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
@@ -170,7 +172,11 @@ export default function AddGameSheet({ open, onClose }: Props) {
             <ArrowLeft size={14} /> Back to search
           </button>
           <GameForm
-            initial={initialFromIgdb}
+            initial={{
+              ...(defaultOwnershipStatus && { ownershipStatus: defaultOwnershipStatus }),
+              ...(defaultCompletionStatus && { completionStatus: defaultCompletionStatus }),
+              ...initialFromIgdb,
+            }}
             igdbData={selected}
             onSubmit={handleSave}
             onCancel={handleClose}

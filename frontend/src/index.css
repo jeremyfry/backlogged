@@ -202,7 +202,7 @@ body::after {
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.sheet-panel-hidden { transform: translateX(-50%) translateY(-100%); }
+.sheet-panel-hidden { transform: translateX(-50%) translateY(calc(-100% - 60px)); }
 .sheet-panel-visible { transform: translateX(-50%) translateY(0); }
 
 /* Status colors */

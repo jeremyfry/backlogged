@@ -1,4 +1,4 @@
-export type OwnershipStatus = 'owned' | 'wishlist'
+export type OwnershipStatus = 'owned' | 'wishlist' | 'digital'
 
 export type Condition =
   | 'wanted'

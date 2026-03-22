@@ -34,7 +34,7 @@ export const games = sqliteTable('games', {
 
   // Ownership
   ownershipStatus: text('ownership_status', {
-    enum: ['owned', 'wishlist'],
+    enum: ['owned', 'wishlist', 'digital'],
   }).notNull(),
   condition: text('condition', {
     enum: ['wanted', 'sealed', 'complete_in_box', 'loose', 'incomplete'],
