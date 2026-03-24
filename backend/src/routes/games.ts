@@ -2,10 +2,35 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../lib/asyncHandler.js'
 import * as gamesService from '../services/games.js'
-import type { CreateGameInput, UpdateGameInput, ApiError } from '@backlogged/types'
+import type { CreateGameInput, UpdateGameInput, Game, ApiError } from '@backlogged/types'
 
 const router = Router()
 router.use(requireAuth)
+
+router.post(
+  '/import',
+  asyncHandler(async (req, res) => {
+    const { mode, games } = req.body as { mode?: unknown; games?: unknown }
+    if (mode !== 'add' && mode !== 'replace') {
+      const body: ApiError = { error: 'bad_request', message: 'mode must be "add" or "replace"' }
+      res.status(400).json(body)
+      return
+    }
+    if (!Array.isArray(games)) {
+      const body: ApiError = { error: 'bad_request', message: 'games must be an array' }
+      res.status(400).json(body)
+      return
+    }
+    const invalid = (games as Partial<Game>[]).find(g => !g.title || !g.platform || !g.language || !g.ownershipStatus)
+    if (invalid) {
+      const body: ApiError = { error: 'bad_request', message: 'Each game must have title, platform, language, and ownershipStatus' }
+      res.status(400).json(body)
+      return
+    }
+    await gamesService.importGames(mode, games as CreateGameInput[])
+    res.status(204).send()
+  }),
+)
 
 // Reorder must come before /:id to avoid being swallowed by the param route
 router.patch(

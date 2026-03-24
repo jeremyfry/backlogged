@@ -34,4 +34,10 @@ export const gamesApi = {
       method: 'PATCH',
       body: JSON.stringify({ ids }),
     }),
+
+  import: (mode: 'add' | 'replace', games: Game[]) =>
+    apiFetch<void>('/games/import', {
+      method: 'POST',
+      body: JSON.stringify({ mode, games }),
+    }),
 }

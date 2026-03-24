@@ -104,4 +104,42 @@ export function reorderBacklog(orderedIds: number[], dbInstance: DB = defaultDb)
   })
 }
 
+export async function importGames(
+  mode: 'add' | 'replace',
+  input: CreateGameInput[],
+  dbInstance: DB = defaultDb,
+) {
+  const rows: InsertGameRow[] = input.map(g => ({
+    title: g.title,
+    platform: g.platform,
+    language: g.language,
+    ownershipStatus: g.ownershipStatus,
+    completionStatus: g.completionStatus,
+    genre: g.genre ?? null,
+    developer: g.developer ?? null,
+    publisher: g.publisher ?? null,
+    releaseYear: g.releaseYear ?? null,
+    coverArtUrl: g.coverArtUrl ?? null,
+    igdbId: g.igdbId ?? null,
+    personalRating: g.personalRating ?? null,
+    hltbMainStory: g.hltbMainStory ?? null,
+    hltbExtras: g.hltbExtras ?? null,
+    hltbCompletionist: g.hltbCompletionist ?? null,
+    notes: g.notes ?? null,
+    completionDate: g.completionDate ?? null,
+    personalPlaytime: g.personalPlaytime ?? null,
+    condition: g.condition ?? null,
+    purchasePrice: g.purchasePrice ?? null,
+    purchaseDate: g.purchaseDate ?? null,
+    purchaseLocation: g.purchaseLocation ?? null,
+    targetPrice: g.targetPrice ?? null,
+    backlogPosition: g.backlogPosition ?? null,
+  }))
+
+  dbInstance.transaction(tx => {
+    if (mode === 'replace') tx.delete(games).run()
+    if (rows.length > 0) tx.insert(games).values(rows).run()
+  })
+}
+
 export { createDb }
