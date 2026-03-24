@@ -86,6 +86,7 @@ interface RawIgdbGame {
   id: number
   name: string
   cover?: { image_id: string }
+  artworks?: { image_id: string }[]
   first_release_date?: number // Unix timestamp (seconds)
   platforms?: { name: string }[]
   genres?: { name: string }[]
@@ -104,6 +105,7 @@ function normalize(raw: RawIgdbGame): IgdbSearchResult {
     igdbId: raw.id,
     title: raw.name,
     coverUrl: raw.cover ? coverUrl(raw.cover.image_id) : null,
+    artworkUrls: raw.artworks?.map((a) => coverUrl(a.image_id, 'cover_big')) ?? [],
     releaseYear: raw.first_release_date
       ? new Date(raw.first_release_date * 1000).getFullYear()
       : null,
@@ -116,7 +118,7 @@ function normalize(raw: RawIgdbGame): IgdbSearchResult {
 }
 
 const GAME_FIELDS =
-  'id,name,cover.image_id,first_release_date,platforms.name,genres.name,' +
+  'id,name,cover.image_id,artworks.image_id,first_release_date,platforms.name,genres.name,' +
   'involved_companies.company.name,involved_companies.developer,involved_companies.publisher,summary'
 
 // --- Public API ---

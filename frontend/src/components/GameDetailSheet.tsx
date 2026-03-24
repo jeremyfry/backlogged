@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { X, Pencil, Trash2, Clock, Tag } from 'lucide-react'
-import type { Game, CompletionStatus } from '@backlogged/types'
+import type { Game, CompletionStatus, IgdbSearchResult } from '@backlogged/types'
 import { gamesApi } from '../api/games'
+import { igdbApi } from '../api/igdb'
 import { useQueryClient } from '@tanstack/react-query'
 import GameForm from './GameForm'
 import { formatMinutes, formatCurrency, formatDate } from '../lib/format'
@@ -17,6 +18,7 @@ export default function GameDetailSheet({ game, onClose }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [visible, setVisible] = useState(false)
   const [status, setStatus] = useState(game?.completionStatus ?? 'unplayed')
+  const [igdbData, setIgdbData] = useState<IgdbSearchResult | null>(null)
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -26,6 +28,14 @@ export default function GameDetailSheet({ game, onClose }: Props) {
   useEffect(() => {
     if (game) requestAnimationFrame(() => setVisible(true))
   }, [game])
+
+  useEffect(() => {
+    if (editing && game?.igdbId) {
+      igdbApi.getById(game.igdbId).then(setIgdbData).catch(() => {})
+    } else if (!editing) {
+      setIgdbData(null)
+    }
+  }, [editing, game?.igdbId])
 
   useEffect(() => {
     if (!game) return
@@ -119,6 +129,7 @@ export default function GameDetailSheet({ game, onClose }: Props) {
               <div className="overflow-y-auto flex-1 px-5 py-4 pb-safe">
                 <GameForm
                   initial={game}
+                  igdbData={igdbData}
                   onSubmit={handleUpdate}
                   onCancel={() => setEditing(false)}
                   submitLabel="Save Changes"

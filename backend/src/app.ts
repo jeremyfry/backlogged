@@ -1,26 +1,33 @@
 import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
 import path from 'node:path'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import authRouter from './routes/auth.js'
 import gamesRouter from './routes/games.js'
 import igdbRouter from './routes/igdb.js'
 import hltbRouter from './routes/hltb.js'
 import settingsRouter from './routes/settings.js'
+import uploadsRouter from './routes/uploads.js'
 import type { ApiError } from '@backlogged/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const uploadsDir = path.join(process.cwd(), 'uploads')
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use('/uploads', express.static(uploadsDir))
 
 app.use('/api/auth', authRouter)
 app.use('/api/games', gamesRouter)
 app.use('/api/igdb', igdbRouter)
 app.use('/api/hltb', hltbRouter)
 app.use('/api/settings', settingsRouter)
+app.use('/api/uploads', uploadsRouter)
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })

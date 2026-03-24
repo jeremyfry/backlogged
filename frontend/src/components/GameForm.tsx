@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Clock, RefreshCw } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Clock, RefreshCw, Upload } from 'lucide-react'
 import type { CreateGameInput, IgdbSearchResult, HltbResult } from '@backlogged/types'
 import { PLATFORMS, LANGUAGES, CONDITIONS, COMPLETION_STATUSES } from '../lib/constants'
 import Combobox from './Combobox'
 import { formatMinutes } from '../lib/format'
 import { hltbApi } from '../api/hltb'
+import { uploadsApi } from '../api/uploads'
 
 interface Props {
   initial?: Partial<CreateGameInput>
@@ -12,6 +13,11 @@ interface Props {
   onSubmit: (data: CreateGameInput) => Promise<void>
   onCancel: () => void
   submitLabel?: string
+}
+
+const PLATFORM_LANGUAGE: Record<string, string> = {
+  'Famicom':       'Japanese',
+  'Super Famicom': 'Japanese',
 }
 
 const DEFAULT: CreateGameInput = {
@@ -45,7 +51,24 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
   const [form, setForm] = useState<CreateGameInput>({ ...DEFAULT, ...initial })
   const [saving, setSaving] = useState(false)
   const [hltbLoading, setHltbLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadsApi.upload(file)
+      set('coverArtUrl', url)
+    } catch {
+      setError('Image upload failed')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
 
   const set = <K extends keyof CreateGameInput>(key: K, value: CreateGameInput[K]) =>
     setForm(f => ({ ...f, [key]: value }))
@@ -109,23 +132,84 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
         ))}
       </div>
 
-      {/* Cover preview (from IGDB) */}
-      {(igdbData?.coverUrl ?? form.coverArtUrl) && (
-        <div className="flex gap-4 items-start">
-          <img
-            src={igdbData?.coverUrl ?? form.coverArtUrl ?? ''}
-            alt={form.title}
-            className="w-16 rounded-lg object-cover aspect-[3/4]"
-          />
-          {igdbData && (
-            <div>
-              <p className="text-xs text-text-muted">From IGDB</p>
-              <p className="font-semibold text-sm">{igdbData.title}</p>
-              {igdbData.releaseYear && <p className="text-xs text-text-muted">{igdbData.releaseYear}</p>}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Cover art */}
+      {(() => {
+        const igdbCovers = igdbData
+          ? ([igdbData.coverUrl, ...igdbData.artworkUrls].filter(Boolean) as string[])
+          : []
+        const showStrip = igdbCovers.length > 0 || true // always show for upload
+        const previewUrl = form.coverArtUrl ?? igdbCovers[0] ?? null
+
+        return (
+          <div>
+            {previewUrl && (
+              <div className="flex gap-4 items-start mb-3">
+                <img
+                  src={previewUrl}
+                  alt={form.title}
+                  className="w-16 rounded-lg object-cover aspect-[3/4] shrink-0"
+                />
+                {igdbData && (
+                  <div>
+                    <p className="text-xs text-text-muted">From IGDB</p>
+                    <p className="font-semibold text-sm">{igdbData.title}</p>
+                    {igdbData.releaseYear && <p className="text-xs text-text-muted">{igdbData.releaseYear}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+            {showStrip && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {igdbCovers.map(url => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => set('coverArtUrl', url)}
+                    className="shrink-0 rounded-lg overflow-hidden transition-opacity"
+                    style={{
+                      width: '48px',
+                      aspectRatio: '3/4',
+                      outline: form.coverArtUrl === url ? '2px solid var(--accent)' : '2px solid transparent',
+                      outlineOffset: '2px',
+                      opacity: form.coverArtUrl === url ? 1 : 0.5,
+                    }}
+                  >
+                    <img
+                      src={url.replace('t_cover_big', 't_thumb')}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+                {/* Upload tile */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="shrink-0 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                  style={{
+                    width: '48px',
+                    aspectRatio: '3/4',
+                    border: '1.5px dashed var(--border-bright)',
+                    background: 'var(--elevated)',
+                    color: 'var(--text-muted)',
+                  }}
+                  title="Upload custom image"
+                >
+                  <Upload size={14} className={uploading ? 'animate-pulse' : ''} />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Title */}
       <div>
@@ -139,7 +223,10 @@ export default function GameForm({ initial, igdbData, onSubmit, onCancel, submit
           <label className="block text-xs text-text-muted mb-1.5 tracking-wide uppercase">Platform *</label>
           <Combobox
             value={form.platform}
-            onChange={v => set('platform', v)}
+            onChange={v => {
+              set('platform', v)
+              if (PLATFORM_LANGUAGE[v]) set('language', PLATFORM_LANGUAGE[v])
+            }}
             options={PLATFORMS}
             placeholder="NES, PS2…"
             required

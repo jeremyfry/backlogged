@@ -94,6 +94,7 @@ export interface IgdbSearchResult {
   igdbId: number
   title: string
   coverUrl: string | null
+  artworkUrls: string[]
   releaseYear: number | null
   platforms: string[]
   genres: string[]
