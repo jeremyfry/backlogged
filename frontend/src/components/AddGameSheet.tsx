@@ -85,10 +85,14 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
     setStep('form')
   }
 
-  const handleSave = async (data: CreateGameInput) => {
+  const handleSave = async (data: CreateGameInput, addAnother: boolean) => {
     await gamesApi.create(data)
     await queryClient.invalidateQueries({ queryKey: ['games'] })
-    handleClose()
+    if (addAnother) {
+      reset()
+    } else {
+      handleClose()
+    }
   }
 
   const initialFromIgdb = selected
@@ -232,6 +236,7 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
             onSubmit={handleSave}
             onCancel={handleClose}
             submitLabel="Add to Collection"
+            allowAddAnother
           />
         </>
       )}

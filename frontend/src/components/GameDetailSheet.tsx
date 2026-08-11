@@ -133,6 +133,7 @@ export default function GameDetailSheet({ game, onClose }: Props) {
                   onSubmit={handleUpdate}
                   onCancel={() => setEditing(false)}
                   submitLabel="Save Changes"
+                  defaultExpanded
                 />
               </div>
             </>
