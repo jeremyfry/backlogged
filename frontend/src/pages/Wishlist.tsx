@@ -13,6 +13,7 @@ const SORT_OPTIONS = [
   { value: 'platform',    label: 'Platform' },
   { value: 'releaseYear', label: 'Year' },
   { value: 'targetPrice', label: 'Target Price' },
+  { value: 'createdAt',   label: 'Added' },
 ]
 
 type ViewMode = 'cards' | 'art' | 'list'

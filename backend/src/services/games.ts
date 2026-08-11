@@ -29,6 +29,7 @@ function sortColumn(sort?: string) {
     case 'releaseYear': return games.releaseYear
     case 'personalRating': return games.personalRating
     case 'backlogPosition': return games.backlogPosition
+    case 'createdAt': return games.createdAt
     default: return games.title
   }
 }

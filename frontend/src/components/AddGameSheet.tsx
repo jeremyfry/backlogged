@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, ArrowLeft, X } from 'lucide-react'
 import type { IgdbSearchResult, CreateGameInput, OwnershipStatus, CompletionStatus } from '@backlogged/types'
 import { igdbApi } from '../api/igdb'
@@ -35,6 +36,7 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
   const [rawResults, setRawResults] = useState<IgdbSearchResult[]>([])
   const [selected, setSelected] = useState<IgdbSearchResult | null>(null)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const debouncedQuery = useDebounce(query, 450)
   const debouncedBeforeYear = useDebounce(beforeYear, 600)
   const { settings } = useSettings()
@@ -70,6 +72,8 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
   }
 
   const handleClose = () => { reset(); onClose() }
+
+  const goToSettings = () => { handleClose(); navigate('/settings') }
 
   const selectGame = (game: IgdbSearchResult) => {
     setSelected(game)
@@ -184,7 +188,16 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
             </ul>
           )}
 
-          {!searching && query && results.length === 0 && (
+          {!searching && query && results.length === 0 && rawResults.length > 0 && (
+            <p className="text-center text-text-muted text-sm py-4">
+              {rawResults.length} result{rawResults.length !== 1 ? 's' : ''} found, but hidden by your IGDB platform filter.{' '}
+              <button type="button" onClick={goToSettings} className="text-accent hover:underline">
+                Adjust in Settings
+              </button>
+            </p>
+          )}
+
+          {!searching && query && results.length === 0 && rawResults.length === 0 && (
             <p className="text-center text-text-muted text-sm py-4">No results found</p>
           )}
 

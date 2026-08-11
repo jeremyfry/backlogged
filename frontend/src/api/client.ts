@@ -33,7 +33,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     },
   })
 
-  if (res.status === 401) {
+  if (res.status === 401 && token) {
     clearToken()
     window.dispatchEvent(new Event('auth:logout'))
     throw new ApiError(401, 'Session expired')

@@ -89,6 +89,9 @@ export default function Login() {
               type="text"
               placeholder="Username"
               autoComplete={mode === 'setup' ? 'username' : 'username'}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={username}
               onChange={e => setUsername(e.target.value)}
               required

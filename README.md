@@ -47,7 +47,7 @@ Keep tabs on what you own, what you want, and what's next in the queue. BACKLOGG
 | Backend  | Node.js, Express, TypeScript |
 | Database | SQLite via Drizzle ORM |
 | Auth     | JWT (single-user) |
-| Deploy   | Docker, Docker Compose |
+| Deploy   | systemd service on bare Node.js |
 
 ---
 
