@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, ArrowLeft, X } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { Search, ArrowLeft, Settings as SettingsIcon, X } from 'lucide-react'
 import type { IgdbSearchResult, CreateGameInput, OwnershipStatus, CompletionStatus } from '@backlogged/types'
 import { igdbApi } from '../api/igdb'
 import { gamesApi } from '../api/games'
@@ -9,6 +8,7 @@ import { useSettings } from '../hooks/useSettings'
 import { useQueryClient } from '@tanstack/react-query'
 import Sheet from './Sheet'
 import GameForm from './GameForm'
+import PlatformFilterPicker, { isPlatformFilterActive } from './PlatformFilterPicker'
 
 interface Props {
   open: boolean
@@ -18,6 +18,8 @@ interface Props {
 }
 
 type Step = 'search' | 'form'
+
+const BEFORE_YEAR_STORAGE_KEY = 'igdb-search-before-year'
 
 function useDebounce<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -31,17 +33,20 @@ function useDebounce<T>(value: T, ms: number): T {
 export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, defaultCompletionStatus }: Props) {
   const [step, setStep] = useState<Step>('search')
   const [query, setQuery] = useState('')
-  const [beforeYear, setBeforeYear] = useState('')
+  // Persisted across sessions — a "before year" filter you set once tends to apply to every search you do.
+  const [beforeYear, setBeforeYear] = useState(() => localStorage.getItem(BEFORE_YEAR_STORAGE_KEY) ?? '')
   const [searching, setSearching] = useState(false)
   const [rawResults, setRawResults] = useState<IgdbSearchResult[]>([])
   const [selected, setSelected] = useState<IgdbSearchResult | null>(null)
+  const [platformPickerOpen, setPlatformPickerOpen] = useState(false)
+  const platformPickerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const debouncedQuery = useDebounce(query, 450)
   const debouncedBeforeYear = useDebounce(beforeYear, 600)
-  const { settings } = useSettings()
+  const { settings, update: updateSettings } = useSettings()
 
   const beforeYearNum = debouncedBeforeYear ? parseInt(debouncedBeforeYear, 10) : undefined
+  const platformFilterActive = isPlatformFilterActive(settings.igdbPlatforms)
 
   // IGDB fetch — only re-runs when the query or year filter changes, not when settings change
   useEffect(() => {
@@ -57,23 +62,38 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
 
   // Filter is a pure derivation — updates instantly when settings change, no re-fetch
   const results = useMemo(() => {
-    if (settings.igdbPlatforms.length === 0) return rawResults
+    if (!platformFilterActive) return rawResults
     return rawResults.filter(game =>
       game.platforms.some(p => settings.igdbPlatforms.includes(normalizeIgdbPlatform(p)))
     )
-  }, [rawResults, settings.igdbPlatforms])
+  }, [rawResults, settings.igdbPlatforms, platformFilterActive])
+
+  // Close platform picker on outside click
+  useEffect(() => {
+    if (!platformPickerOpen) return
+    const handler = (e: MouseEvent) => {
+      if (platformPickerRef.current && !platformPickerRef.current.contains(e.target as Node)) {
+        setPlatformPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [platformPickerOpen])
+
+  const setBeforeYearPersisted = (value: string) => {
+    setBeforeYear(value)
+    if (value) localStorage.setItem(BEFORE_YEAR_STORAGE_KEY, value)
+    else localStorage.removeItem(BEFORE_YEAR_STORAGE_KEY)
+  }
 
   const reset = () => {
     setStep('search')
     setQuery('')
-    setBeforeYear('')
     setRawResults([])
     setSelected(null)
   }
 
   const handleClose = () => { reset(); onClose() }
-
-  const goToSettings = () => { handleClose(); navigate('/settings') }
 
   const selectGame = (game: IgdbSearchResult) => {
     setSelected(game)
@@ -136,16 +156,48 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
                 max={new Date().getFullYear()}
                 placeholder="Before"
                 value={beforeYear}
-                onChange={e => setBeforeYear(e.target.value)}
+                onChange={e => setBeforeYearPersisted(e.target.value)}
               />
               {beforeYear && (
                 <button
                   type="button"
-                  onClick={() => setBeforeYear('')}
+                  onClick={() => setBeforeYearPersisted('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
                 >
                   <X size={12} />
                 </button>
+              )}
+            </div>
+            <div className="relative" ref={platformPickerRef}>
+              <button
+                type="button"
+                onClick={() => setPlatformPickerOpen(o => !o)}
+                aria-label="Platform filter"
+                className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors shrink-0"
+                style={platformFilterActive
+                  ? { color: 'var(--accent)', background: 'var(--elevated)' }
+                  : { color: 'var(--text-muted)', background: 'var(--elevated)' }
+                }
+              >
+                <SettingsIcon size={16} />
+              </button>
+              {platformPickerOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1 z-30 rounded-xl overflow-hidden shadow-xl p-3"
+                  style={{
+                    width: 280,
+                    maxHeight: 320,
+                    overflowY: 'auto',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border-bright)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <PlatformFilterPicker
+                    selected={settings.igdbPlatforms}
+                    onChange={igdbPlatforms => updateSettings({ igdbPlatforms })}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -179,7 +231,7 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
                       <p className="text-xs text-text-muted">
                         {[
                           game.releaseYear,
-                          (settings.igdbPlatforms.length > 0
+                          (platformFilterActive
                             ? game.platforms.filter(p => settings.igdbPlatforms.includes(normalizeIgdbPlatform(p)))
                             : game.platforms.slice(0, 2)
                           ).map(normalizeIgdbPlatform).join(', '),
@@ -194,9 +246,9 @@ export default function AddGameSheet({ open, onClose, defaultOwnershipStatus, de
 
           {!searching && query && results.length === 0 && rawResults.length > 0 && (
             <p className="text-center text-text-muted text-sm py-4">
-              {rawResults.length} result{rawResults.length !== 1 ? 's' : ''} found, but hidden by your IGDB platform filter.{' '}
-              <button type="button" onClick={goToSettings} className="text-accent hover:underline">
-                Adjust in Settings
+              {rawResults.length} result{rawResults.length !== 1 ? 's' : ''} found, but hidden by your platform filter.{' '}
+              <button type="button" onClick={() => setPlatformPickerOpen(true)} className="text-accent hover:underline">
+                Adjust platforms
               </button>
             </p>
           )}
